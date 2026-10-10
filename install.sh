@@ -126,6 +126,21 @@ install_apt_packages() {
     )
     sudo apt install -y "${essential_pkgs[@]}"
     log_success "Paquetes esenciales instalados."
+    set_default_shell
+}
+
+set_default_shell() {
+    if command -v zsh >/dev/null 2>&1; then
+        local zsh_path
+        zsh_path="$(which zsh)"
+        if [ "$SHELL" != "$zsh_path" ]; then
+            log_info "Configurando Zsh como shell por defecto..."
+            chsh -s "$zsh_path" "$USER" 2>/dev/null || sudo chsh -s "$zsh_path" "$USER" 2>/dev/null || true
+            log_success "Zsh establecido como shell por defecto ($zsh_path)."
+        else
+            log_info "Zsh ya está configurado como tu shell por defecto."
+        fi
+    fi
 }
 
 show_menu() {
