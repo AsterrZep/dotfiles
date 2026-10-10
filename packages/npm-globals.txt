@@ -1,5 +1,15 @@
-/home/aster/.npm-global/lib
-├── chrome-devtools-mcp@1.9.0
-├── freebuff@0.0.160
-└── vercel@59.26.0
+# Paquetes globales de npm (prefix: ~/.npm-global, definido en npm/.npmrc)
+# Un paquete por línea (admite `nombre@versión`); las líneas con # se ignoran.
+# Los instala: ./install.sh --packages  (o --all) vía install_npm_globals.
+#
+# Nota: el binario npm/npx NO se lista aquí: lo aporta nvm (~/.nvm o
+# ~/.config/nvm). Si apareciera un npm global en ~/.npm-global/bin, taparía
+# el de nvm y `npm i -g` dejaría de actualizar lo que se ejecuta.
 
+opencode-ai
+
+# --- Documentados, pero NO instalados en el contenedor actual ---
+# chrome-devtools-mcp   opencode lo usa vía npx con versión fija
+#                       (ver config/opencode/opencode.jsonc)
+# freebuff
+# vercel

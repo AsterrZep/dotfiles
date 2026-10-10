@@ -119,10 +119,16 @@ fi
 
 # opencode
 export PATH=/home/aster/.opencode/bin:$PATH
-export XDG_DATA_DIRS="$XDG_DATA_DIRS:/var/lib/flatpak/exports/share"
+# Flatpak: exports de aplicaciones
+if [ -d /var/lib/flatpak/exports/share ]; then
+    case ":${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:" in
+        *:/var/lib/flatpak/exports/share:*) ;;
+        *) export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:/var/lib/flatpak/exports/share" ;;
+    esac
+fi
 
 
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 
 # Added by Antigravity CLI installer

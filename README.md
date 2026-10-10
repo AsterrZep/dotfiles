@@ -36,7 +36,7 @@ dotfiles/
 ├── git/
 │   └── .gitconfig           # Configuración global de Git
 ├── npm/
-│   └── .npmrc               # Directorio global ~/.npm-global para evitar sudo
+│   └── .npmrc               # Prefijo global ~/.npm-global + allow-scripts de npm
 ├── config/
 │   ├── starship.toml        # Tema del prompt Starship
 │   ├── cros-garcon.conf     # Ajustes del servicio Garcon de ChromeOS
@@ -51,9 +51,9 @@ dotfiles/
 │   ├── julialsp             # Wrapper para el servidor de lenguaje de Julia
 │   └── cadesimu4_pcsimu     # Script de arranque y automatización con xdotool para Wine
 └── packages/
-    ├── apt-manual.txt       # Lista completa de paquetes instalados manualmente con APT
+    ├── apt-manual.txt       # Volcado de referencia de `dpkg -l` (NO instalar tal cual)
     ├── flatpak-list.txt     # Aplicaciones y runtimes Flatpak
-    ├── npm-globals.txt      # Paquetes globales de Node.js
+    ├── npm-globals.txt      # Paquetes globales de Node.js (una línea por paquete)
     └── cargo-binaries.txt   # Binarios instalados con Cargo (Rust)
 ```
 
@@ -138,6 +138,37 @@ O usando argumentos directos:
   ```bash
   ./install.sh --all
   ```
+
+### 3. Orden recomendado en un contenedor nuevo
+
+`install.sh` cubre enlaces, los paquetes apt esenciales, la locale `es_ES.UTF-8`
+y las dependencias de `~/.config/opencode` (evita que opencode se quede cargando
+mientras hace un `npm install` en frío). El resto es manual:
+
+```bash
+./install.sh --all
+# Node.js (nvm): el bloque final de .zshrc lo carga desde ~/.config/nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+# Rust / Julia / Flatpak: instalar desde su web o con apt
+```
+
+Advertencias:
+
+- **`packages/apt-manual.txt` es un volcado de `dpkg -l`** (incluye la base del
+  sistema y paquetes de terceros que no existen sin sus repositorios). Sirve de
+  referencia, no se instala automáticamente. Lo único que instala `install.sh`
+  es la lista `essential_pkgs` del propio script.
+- **`packages/cargo-binaries.txt` mezcla componentes de `rustup`**
+  (`rustfmt`, `clippy`, `rust-analyzer`…) con herramientas de `cargo install`.
+  Los componentes se instalan con `rustup component add`.
+- **Un solo npm global**: `prefix=~/.npm-global` en `npm/.npmrc` manda los
+  paquetes globales fuera del árbol de nvm (sobreviven a los cambios de
+  versión de Node). El `npm`/`npx` que se ejecutan son los de nvm: no hay que
+  instalar el paquete `npm` con `npm i -g`, porque un `~/.npm-global/bin/npm`
+  taparía al de nvm y las actualizaciones globales dejarían de verse.
+  nvm avisa en cada arranque por ese `prefix` (es cosmético; `.zshrc` filtra
+  el aviso). **No ejecutes** `nvm use --delete-prefix` si no quieres que
+  borre esa línea de este archivo.
 
 ---
 

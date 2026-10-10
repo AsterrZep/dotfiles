@@ -1,8 +1,8 @@
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#545862"
 
 plugins=()
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ] && source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 autoload -Uz compinit && compinit
 
@@ -24,8 +24,8 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 export EDITOR=nvim
 export LANG=es_ES.UTF-8
 
-eval "$(starship init zsh)"
-eval "$(zoxide init zsh)"
+command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 
 # ---------- eza (ls moderno) ----------
 alias ls='eza --group-directories-first'
@@ -79,7 +79,7 @@ alias update='sudo apt update && sudo apt upgrade -y'
 alias ip='ip -c'
 
 # ---------- fzf ----------
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_DEFAULT_COMMAND='fdfind --type f --hidden --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS='--height 60% --layout=reverse --border --color=fg:#a8a8a8,hl:#5f87ff --preview "fzf-preview.sh {}" --preview-window=right:50%:wrap'
 export FZF_CTRL_T_OPTS="--preview 'fzf-preview.sh {}'"
@@ -87,7 +87,7 @@ export FZF_CTRL_T_OPTS="--preview 'fzf-preview.sh {}'"
 [ -f /usr/share/doc/fzf/examples/completion.zsh ] && source /usr/share/doc/fzf/examples/completion.zsh
 
 # ---------- zsh vi-mode opcional ----------
-bindkey '^R' fzf-history-widget
+(( $+functions[fzf-history-widget] )) && bindkey '^R' fzf-history-widget
 export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 
 # pnpm
@@ -120,3 +120,17 @@ export PATH
 [ -f "/home/aster/.julia/juliaup/completions/zsh.zsh" ] && source "/home/aster/.julia/juliaup/completions/zsh.zsh"
 
 # <<< juliaup initialize <<<
+
+# ---------- nvm (Node.js) ----------
+# Sin este bloque no existen node/npm/npx tras restaurar los dotfiles:
+# fallan el MCP de opencode (npx) y el npm install del plugin de status.
+export NVM_DIR="$HOME/.config/nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    # nvm se queja del `prefix` de ~/.npmrc (globals en ~/.npm-global, fuera
+    # de su árbol). Solo es un aviso: el PATH de nvm se aplica igual. Se
+    # filtran esas 3 líneas; el resto de errores de nvm se muestran igual.
+    . "$NVM_DIR/nvm.sh" 2> >(grep -v \
+        -e 'npmrc file' \
+        -e 'incompatible with nvm' \
+        -e 'nvm use --delete-prefix' >&2)
+fi

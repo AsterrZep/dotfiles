@@ -25,24 +25,23 @@ show_menu() {
     echo -e "${C_PURPLE}==============================================${C_RESET}"
     echo "1) Crear enlaces simbólicos (dotfiles y scripts)"
     echo "2) Instalar paquetes esenciales vía APT"
-    echo "3) Instalación completa (paquetes + enlaces)"
+    echo "3) Instalación completa (enlaces + APT)"
     echo "4) Salir"
     echo ""
 }
 
 install_apt_packages() {
-    if [ ! -f "$DOTFILES_DIR/packages/apt-manual.txt" ]; then
-        log_info "Instalando paquetes base recomendados desde APT..."
-        sudo apt update
-        local essential_pkgs=('zsh' 'zsh-autosuggestions' 'zsh-syntax-highlighting' 'starship' 'zoxide' 'eza' 'bat' 'ripgrep' 'fd-find' 'fzf' 'chafa' 'timg' 'tmux' 'neovim' 'git' 'curl' 'build-essential' 'xdotool' 'flatpak')
-        sudo apt install -y "${essential_pkgs[@]}"
-        log_success "Paquetes esenciales instalados."
-    else
-        log_info "Instalando paquetes desde apt-manual.txt..."
-        sudo apt update
-        sudo apt install -y $(cat "$DOTFILES_DIR/packages/apt-manual.txt")
-        log_success "Paquetes de apt-manual.txt instalados."
-    fi
+    # Paquetes clave esenciales de la configuración.
+    # NOTA: packages/apt-manual.txt es solo un volcado de referencia de
+    # `dpkg -l` (incluye la base del sistema y paquetes de terceros que no
+    # existen sin sus repositorios), por eso NO se instala automáticamente.
+    log_info "Instalando paquetes base recomendados desde APT..."
+    sudo apt update
+    local essential_pkgs=('zsh' 'zsh-autosuggestions' 'zsh-syntax-highlighting' 'starship' 'zoxide' 'eza' 'bat' 'ripgrep' 'fd-find' 'fzf' 'chafa' 'timg' 'tmux' 'neovim' 'git' 'curl' 'build-essential' 'xdotool' 'flatpak')
+    sudo apt install -y "${essential_pkgs[@]}"
+    log_success "Paquetes esenciales instalados."
+
+    generate_locale
 
     # Configurar Zsh como shell por defecto de forma no interactiva segura
     local zsh_path
@@ -61,6 +60,75 @@ install_apt_packages() {
     fi
 }
 
+generate_locale() {
+    local locale_name="es_ES.UTF-8"
+
+    command -v locale-gen >/dev/null 2>&1 || return 0
+    if locale -a 2>/dev/null | grep -qi '^es_ES\.utf-8$'; then
+        return 0
+    fi
+
+    log_info "Generando la locale $locale_name (evita los avisos de LC_CTYPE)..."
+    if [ -f /etc/locale.gen ]; then
+        sudo sed -i "s/^# *${locale_name} UTF-8/${locale_name} UTF-8/" /etc/locale.gen 2>/dev/null \
+            || printf '%s UTF-8\n' "$locale_name" | sudo tee -a /etc/locale.gen >/dev/null
+    fi
+    sudo locale-gen >/dev/null 2>&1 || log_warn "No se pudo generar la locale $locale_name."
+}
+
+install_opencode_deps() {
+    local opencode_config="$DOTFILES_DIR/config/opencode"
+
+    [ -f "$opencode_config/package.json" ] || return 0
+
+    if ! command -v npm >/dev/null 2>&1; then
+        log_warn "npm no disponible; se omite la instalación de dependencias de opencode."
+        return 0
+    fi
+
+    log_info "Instalando dependencias de opencode (plugins)..."
+    if npm install --prefix "$opencode_config" --no-audit --no-fund; then
+        log_success "Dependencias de opencode listas en $opencode_config/node_modules."
+    else
+        log_warn "No se pudieron instalar las dependencias de opencode (¿sin red?)."
+        log_warn "Si opencode se queda cargando: npm install --prefix ~/.config/opencode"
+        log_warn "o ábrelo temporalmente con: opencode --pure"
+    fi
+
+    # Precachear el MCP de chrome-devtools para que el primer uso no tarde.
+    if command -v npx >/dev/null 2>&1; then
+        log_info "Precacheando chrome-devtools-mcp (solo la primera vez)..."
+        npx -y chrome-devtools-mcp@1.10.1 --help >/dev/null 2>&1 \
+            || log_warn "No se pudo precachear chrome-devtools-mcp (opcional)."
+    fi
+}
+
+install_npm_globals() {
+    local list_file="$DOTFILES_DIR/packages/npm-globals.txt"
+    local pkg
+    local to_install=()
+
+    [ -f "$list_file" ] || return 0
+    if ! command -v npm >/dev/null 2>&1; then
+        log_warn "npm no disponible; se omite la instalación de paquetes globales."
+        return 0
+    fi
+
+    while IFS= read -r pkg; do
+        case "$pkg" in ''|'#'*) continue ;; esac
+        to_install+=("$pkg")
+    done < "$list_file"
+
+    [ ${#to_install[@]} -eq 0 ] && return 0
+
+    log_info "Instalando paquetes globales de npm en ~/.npm-global..."
+    if npm install -g --no-audit --no-fund "${to_install[@]}"; then
+        log_success "Paquetes globales de npm instalados."
+    else
+        log_warn "No se pudieron instalar todos los paquetes globales de npm."
+    fi
+}
+
 create_symlinks() {
     log_info "Configurando enlaces simbólicos..."
     log_info "Creando directorios necesarios..."
@@ -74,15 +142,15 @@ create_symlinks() {
     link_file() {
         local src="$1"
         local dest="$2"
+
         if [ -e "$dest" ] || [ -L "$dest" ]; then
-            mkdir -p "$(dirname "$BACKUP_DIR/$(basename "$(dirname "$dest")")")"
-            if [ -d "$dest" ] && [ ! -L "$dest" ]; then
-                mkdir -p "$BACKUP_DIR/$(dirname "${dest#$HOME/}")"
-                mv "$dest" "$BACKUP_DIR/${dest#$HOME/}"
-            else
-                mkdir -p "$BACKUP_DIR/$(dirname "${dest#$HOME/}")"
-                mv "$dest" "$BACKUP_DIR/${dest#$HOME/}"
+            # Si ya es el enlace simbólico correcto, no tocar nada
+            if [ -L "$dest" ] && [ "$(readlink -f "$dest")" = "$(readlink -f "$src")" ]; then
+                log_info "Ya vinculado: $dest -> $src"
+                return
             fi
+            mkdir -p "$BACKUP_DIR/$(dirname "${dest#$HOME/}")"
+            mv "$dest" "$BACKUP_DIR/${dest#$HOME/}"
             log_warn "Copia de respaldo creada para: $dest"
         fi
         ln -sfn "$src" "$dest"
@@ -115,7 +183,14 @@ create_symlinks() {
     link_file "$DOTFILES_DIR/scripts/julialsp" "$HOME/.local/bin/julialsp"
 
     log_success "Todos los enlaces se han configurado correctamente."
-    log_info "Los archivos reemplazados fueron respaldados en: $BACKUP_DIR"
+    if [ -d "$BACKUP_DIR" ]; then
+        log_info "Los archivos reemplazados fueron respaldados en: $BACKUP_DIR"
+    fi
+
+    # Importante: el plugin de opencode ejecuta `npm install` al cargar.
+    # Sin esto, el primer arranque se queda cargando mientras la red fría
+    # tarda (o falla) en traer @opencode-ai/plugin.
+    install_opencode_deps
 }
 
 # Procesamiento de argumentos o menú interactivo
@@ -124,10 +199,14 @@ if [ "$1" = "--links" ] || [ "$1" = "-l" ]; then
     exit 0
 elif [ "$1" = "--packages" ] || [ "$1" = "-p" ]; then
     install_apt_packages
+    install_npm_globals
     exit 0
 elif [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
-    install_apt_packages
+    # Enlaces primero: si apt falla (p. ej. sin red), al menos la
+    # configuración ya queda vinculada.
     create_symlinks
+    install_apt_packages || log_warn "La instalación de APT falló; los enlaces ya quedaron creados."
+    install_npm_globals
     exit 0
 fi
 
@@ -139,10 +218,12 @@ case "$opt" in
         ;;
     2)
         install_apt_packages
+        install_npm_globals
         ;;
     3)
-        install_apt_packages
         create_symlinks
+        install_apt_packages || log_warn "La instalación de APT falló; los enlaces ya quedaron creados."
+        install_npm_globals
         ;;
     4)
         exit 0
