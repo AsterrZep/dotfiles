@@ -1,0 +1,135 @@
+{
+  "theme": "dracula",
+  "locale": "es",
+  "check_for_updates": true,
+  "editor": {
+    "line_numbers": true,
+    "relative_line_numbers": false,
+    "highlight_current_line": true,
+    "highlight_occurrences": true,
+    "line_wrap": true,
+    "wrap_indent": true,
+    "syntax_highlighting": true,
+    "show_menu_bar": true,
+    "show_tab_bar": true,
+    "show_status_bar": true,
+    "show_vertical_scrollbar": true,
+    "show_horizontal_scrollbar": false,
+    "show_tilde": true,
+    "indentation_guide": "active",
+    "rainbow_indentation": true,
+    "set_window_title": true,
+    "terminal_auto_title": true,
+    "tab_size": 2,
+    "use_tabs": false,
+    "auto_indent": true,
+    "auto_close": true,
+    "auto_surround": true,
+    "default_line_ending": "lf",
+    "trim_trailing_whitespace_on_save": true,
+    "cursor_style": "steady_bar",
+    "scroll_offset": 5,
+    "animations": true,
+    "cursor_jump_animation": true
+  },
+  "status_bar": {
+    "left": [
+      "{trust}",
+      "{remote}",
+      "{terminal_restart}",
+      "{cursor}",
+      "{diagnostics}",
+      "{cursor_count}",
+      "{messages}"
+    ],
+    "right": [
+      "{read_only}",
+      "{line_ending}",
+      "{encoding}",
+      "{language}",
+      "{lsp}",
+      "{warnings}",
+      "{update}",
+      "{palette}"
+    ],
+    "separator": ""
+  },
+  "lsp": {
+    "rust": {
+      "command": "rust-analyzer",
+      "enabled": true
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "enabled": true
+    },
+    "javascript": {
+      "command": "typescript-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "enabled": true
+    },
+    "html": {
+      "command": "vscode-html-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "enabled": true,
+      "initialization_options": {
+        "embeddedLanguages": {
+          "css": false,
+          "javascript": true
+        },
+        "validate": {
+          "scripts": true,
+          "styles": false
+        }
+      }
+    },
+    "css": {
+      "command": "vscode-css-language-server",
+      "args": [
+        "--stdio"
+      ],
+      "enabled": true,
+      "initialization_options": {
+        "validate": true
+      }
+    },
+    "python": {
+      "command": "pyright",
+      "args": [
+        "--stdio"
+      ],
+      "enabled": true
+    },
+    "go": {
+      "command": "gopls",
+      "enabled": true
+    },
+    "julia": {
+      "command": "julialsp",
+      "enabled": true
+    }
+  },
+  "languages": {
+    "python": {
+      "tab_size": 4
+    },
+    "go": {
+      "tab_size": 4,
+      "use_tabs": true
+    },
+    "rust": {
+      "tab_size": 4,
+      "format_on_save": true
+    },
+    "julia": {
+      "tab_size": 4
+    }
+  }
+}

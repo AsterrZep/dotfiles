@@ -1,0 +1,40 @@
+#!/bin/bash
+export WINEPREFIX=/home/aster/.wine-cadesimu4
+export WINEARCH=win32
+export DISPLAY=${DISPLAY:-:0}
+
+cd "/home/aster/Proyectos/PC_SIMU/PC_SIMU"
+wine PC_SIMU.exe &
+PC_PID=$!
+
+sleep 3
+
+cd "/home/aster/Proyectos/CADe_SIMU/CADe_SIMU V4.2"
+wine CADe_SIMU_V4.2.exe &
+CA_PID=$!
+
+typing_clave() {
+    local name="$1" key="$2"
+    local n=0
+    while [ $n -lt 30 ]; do
+        local wid
+        wid=$(xdotool search --name "$name" 2>/dev/null | head -1)
+        if [ -n "$wid" ]; then
+            xdotool windowactivate "$wid" 2>/dev/null
+            sleep 0.5
+            xdotool type --window "$wid" --delay 30 "$key"
+            xdotool key --window "$wid" Return
+            break
+        fi
+        n=$((n+1))
+        sleep 1
+    done
+}
+
+typing_clave "Clave de aceso a PC_SIMU" "9966"
+typing_clave "PASSWORD" "4962"
+
+wait $CA_PID
+kill $PC_PID 2>/dev/null
+wineserver -w 2>/dev/null
+exit 0

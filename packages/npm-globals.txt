@@ -1,0 +1,5 @@
+/home/aster/.npm-global/lib
+├── chrome-devtools-mcp@1.9.0
+├── freebuff@0.0.160
+└── vercel@59.26.0
+

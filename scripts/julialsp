@@ -1,0 +1,4 @@
+#!/bin/bash
+# Julia Language Server wrapper for Fresh
+export PATH="$HOME/.juliaup/bin:$PATH"
+exec julia --startup-file=no --history-file=no -e 'using LanguageServer; runserver()'

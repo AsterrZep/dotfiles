@@ -1,0 +1,25 @@
+# Archivos sensibles y credenciales
+*.key
+*.pem
+*.id_rsa
+*.id_ed25519
+*.env
+*.env.*
+*.log
+*history*
+*.token
+*.secret
+
+# Archivos temporales y de editor
+*~
+*.swp
+*.swo
+.DS_Store
+*.bak
+*.old
+
+# Node / Python / Rust temporales
+node_modules/
+__pycache__/
+*.pyc
+target/

@@ -1,0 +1,13 @@
+Mindustry	com.github.Anuken.Mindustry	v159.6	stable	user
+Freedesktop Platform	org.freedesktop.Platform	freedesktop-sdk-25.08.15	25.08	user
+Mesa	org.freedesktop.Platform.GL.default	26.1.8	24.08	user
+Mesa (Extra)	org.freedesktop.Platform.GL.default	26.1.8	24.08extra	user
+Mesa	org.freedesktop.Platform.GL.default	26.1.5	25.08	user
+Mesa (Extra)	org.freedesktop.Platform.GL.default	26.1.5	25.08-extra	user
+Codecs Extra Extension	org.freedesktop.Platform.codecs-extra		25.08-extra	user
+openh264	org.freedesktop.Platform.openh264	2.5.1	2.5.1	user
+GNOME Application Platform version 48	org.gnome.Platform		48	user
+GNOME Software Development Kit version 48	org.gnome.Sdk		48	user
+CrosAdapta	org.gtk.Gtk3theme.CrosAdapta		3.22	user
+KDE Application Platform	org.kde.Platform		5.15-25.08	user
+QElectroTech	org.qelectrotech.QElectroTech	0.9-dev	stable	user
